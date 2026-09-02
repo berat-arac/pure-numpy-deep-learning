@@ -1,0 +1,37 @@
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# Datasets and downloaded archives
+data/
+*.part
+*.tar.gz
+*.gz
+
+# Training artifacts
+checkpoints/
+outputs/
+runs/
+results/
+*.npz
+
+# Local tooling
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
