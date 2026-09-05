@@ -16,7 +16,7 @@ dist/
 *.egg-info/
 
 # Datasets and downloaded archives
-data/
+/data/
 *.part
 *.tar.gz
 *.gz
