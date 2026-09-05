@@ -12,6 +12,8 @@ def test_source_and_scripts_do_not_import_ml_frameworks():
         "from jax",
         "import sklearn",
         "from sklearn",
+        "import cupy",
+        "from cupy",
     )
     offenders = []
     for base in (root / "src", root / "scripts"):

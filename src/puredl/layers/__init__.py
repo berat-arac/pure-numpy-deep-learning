@@ -8,7 +8,7 @@ from .normalization import BatchNorm2D
 from .pooling import MaxPool2D
 from .residual import BasicResidualBlock
 from .squeeze_excitation import SqueezeExcitation
-from .stochastic import StochasticDepth
+from .stochastic import Dropout, StochasticDepth
 
 __all__ = [
     "Linear",
@@ -24,5 +24,6 @@ __all__ = [
     "GlobalAveragePool2D",
     "BasicResidualBlock",
     "SqueezeExcitation",
+    "Dropout",
     "StochasticDepth",
 ]

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pure-numpy-dl"
-version = "0.4.1"
+version = "0.5.0"
 description = "Trainable deep learning models implemented from scratch with NumPy only."
 requires-python = ">=3.11"
 dependencies = ["numpy>=2.0"]

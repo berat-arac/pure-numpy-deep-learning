@@ -48,14 +48,16 @@ Tests cover:
 - optimizer state
 - scheduler state
 - checkpoint save and restore
+- EfficientNet stage construction
+- width and depth scaling behavior
 
 Why this is used:
 
-Many neural network bugs are state-management bugs rather than arithmetic bugs. These tests verify the behavior around the numerical operations.
+Many neural network bugs are state-management bugs rather than arithmetic bugs. These tests verify behavior around the numerical operations.
 
 ## Integrated learning tests
 
-Small NumPy-generated image tasks are used to verify that complete model stacks can reduce loss through real optimizer updates.
+Small NumPy-generated image tasks verify that complete model stacks can reduce loss through real optimizer updates.
 
 Why this is used:
 
@@ -63,8 +65,20 @@ Passing isolated tests does not guarantee that several manually implemented laye
 
 ## Real dataset gates
 
-MNIST and CIFAR-10 are used as development gates before more expensive architectures are added.
+MNIST and CIFAR-10 are used as development gates.
 
 Why this is used:
 
-Real data exposes optimization, normalization, batching, and generalization behavior that synthetic tests cannot fully reproduce.
+Real data exposes optimization, normalization, batching, augmentation, and generalization behavior that synthetic tests cannot fully reproduce.
+
+## Full-model memorization diagnostic
+
+The complete EfficientNet-B0 implementation is also tested on a small fixed CIFAR-10 subset with augmentation and regularization disabled.
+
+Why this is used:
+
+This separates a basic trainability question from generalization. A large model should be able to fit a small fixed dataset if its forward path, backward path, optimizer updates, and state handling work together correctly.
+
+The diagnostic reached 99.61% fit accuracy on 256 fixed training images.
+
+This result is not reported as model quality. It is an end-to-end optimization check.

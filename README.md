@@ -2,70 +2,71 @@
 
 [![CI](https://github.com/berat-arac/pure-numpy-deep-learning/actions/workflows/ci.yml/badge.svg)](https://github.com/berat-arac/pure-numpy-deep-learning/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A from-scratch deep learning project built to understand how neural networks work below high-level frameworks.
+A from-scratch deep learning project implemented with NumPy only.
 
-The current repository contains the **Vision track**. Every model operation, backward pass, optimizer update, normalization step, checkpoint state, and training loop is implemented with NumPy.
+No PyTorch, TensorFlow, JAX, CuPy, or automatic differentiation is used. Forward passes, backward passes, optimizer updates, normalization state, checkpointing, and training loops are implemented directly in NumPy and run on CPU.
 
-No PyTorch, TensorFlow, JAX, CuPy, or automatic differentiation is used.
+The Vision track now progresses from a basic MLP to a full EfficientNet-B0 implementation.
 
-## Current status
-
-The project has progressed from a basic MLP to a trainable MiniEfficientNet-style model.
+## Vision track status
 
 Completed:
 
 - MLP training on MNIST
-- Conv2D with manual backward propagation
-- MaxPool2D
+- Conv2D and MaxPool2D with manual backward propagation
 - BatchNorm2D with training and evaluation state
-- Global average pooling
 - deeper CNN training on CIFAR-10
-- SGD, Adam, learning rate schedulers, and checkpoints
 - residual blocks
-- depthwise and pointwise convolutions
+- depthwise and pointwise convolution
 - depthwise separable convolution
 - squeeze-and-excitation
 - stochastic depth
 - MBConv blocks
-- MiniEfficientNet-style CIFAR model
-
-Current work:
-
-- full EfficientNet-B0 stage builder
+- MiniEfficientNet
+- config-driven EfficientNet builder
+- canonical EfficientNet-B0 stage layout
 - width and depth scaling
-- drop-path scheduling across the network
-- CPU profiling and optimization
+- channel and repeat rounding
+- classifier dropout
+- progressive drop-path scheduling
+- full B0 forward and backward propagation
+- CPU stage profiler
+- full-model trainability diagnostics
+
+The next project track is text modeling with RNN, LSTM, attention, and Transformer implementations.
 
 ## Why this project exists
 
-Modern frameworks make neural network training convenient, but they also hide a large amount of the execution path. This project deliberately removes that abstraction.
+High-level frameworks make deep learning practical, but they hide much of the execution path. This project removes that abstraction so the individual operations, state transitions, gradients, and model-building decisions remain visible.
 
-The goal is not to outperform optimized frameworks. The goal is to build the important pieces directly, train them on real datasets, test the backward passes, and observe the engineering tradeoffs that appear when the framework is removed.
+The goal is not to compete with optimized frameworks in speed or benchmark accuracy. The goal is to implement the important mechanisms directly, verify that they work, and train real models without relying on a neural network framework.
 
 ## What was built and why
 
 | Component | What was implemented | Why it is here |
 | --- | --- | --- |
-| Parameter and Module | Parameters, gradients, nested modules, persistent buffers, state loading | Provides a small reusable foundation without building a full framework clone |
-| Linear | Dense forward and backward passes | Establishes the basic training pipeline before convolutional models |
-| Conv2D | NumPy convolution with manual input, weight, and bias gradients | Core operation for the vision track |
-| MaxPool2D | Forward and backward pooling | Supports standard CNN downsampling while keeping gradient flow explicit |
-| BatchNorm2D | Training state, evaluation state, running statistics, full backward pass | Required for stable deeper CNN and MBConv training |
-| GlobalAveragePool2D | Spatial reduction before classification | Removes the need for large dense classifier heads |
-| SGD and Adam | Optimizer state and parameter updates | Keeps training independent from external ML libraries |
-| LR schedulers | Step and cosine schedules | Makes longer CIFAR experiments practical and reproducible |
-| Checkpoints | Model, optimizer, scheduler, epoch, and metrics | Allows long CPU experiments to resume safely |
-| Residual block | Main branch plus explicit skip-gradient handling | Verifies gradient flow through skip connections before MBConv |
-| DepthwiseConv2D | One spatial convolution per input channel | Introduces the efficient convolution pattern used by EfficientNet |
-| PointwiseConv2D | Explicit 1x1 channel mixing | Complements depthwise convolution and supports MBConv expansion and projection |
-| SqueezeExcitation | Channel recalibration block | Adds the channel attention mechanism used inside EfficientNet blocks |
-| StochasticDepth | Per-sample residual branch dropping during training | Adds the regularization behavior needed for deeper EfficientNet-style stacks |
-| MBConv | Expansion, depthwise convolution, SE, projection, normalization, residual path | Combines the main EfficientNet building blocks into one trainable unit |
-| MiniEfficientNet | Small CIFAR-scale MBConv network | Validates the complete block stack before building full EfficientNet-B0 |
+| Parameter and Module | Parameters, gradients, nested modules, persistent buffers, state loading | Provides a reusable foundation without building a full framework clone |
+| Linear | Dense forward and backward passes | Establishes the first complete trainable network path |
+| Conv2D | NumPy convolution with manual input, weight, and bias gradients | Provides the core operation for the vision track |
+| MaxPool2D | Forward and backward pooling | Adds standard CNN downsampling while keeping gradient flow explicit |
+| BatchNorm2D | Training state, evaluation state, running statistics, backward pass | Supports deeper CNN and MBConv training |
+| GlobalAveragePool2D | Spatial reduction before classification | Avoids large dense classifier heads |
+| SGD and Adam | Optimizer state and parameter updates | Keeps training independent from external ML frameworks |
+| LR schedulers | Step and cosine schedules | Supports controlled longer CPU experiments |
+| Checkpoints | Model, optimizer, scheduler, epoch, and metric state | Allows experiments to resume safely |
+| Residual block | Main branch and explicit skip-gradient path | Validates residual gradient flow before MBConv |
+| DepthwiseConv2D | One spatial convolution per input channel | Adds the efficient spatial operation used by MBConv |
+| PointwiseConv2D | Explicit 1x1 channel mixing | Supports MBConv expansion and projection |
+| SqueezeExcitation | Learned channel recalibration | Implements the channel gating used inside EfficientNet |
+| StochasticDepth | Per-sample residual branch dropping during training | Adds the regularization behavior used by deeper EfficientNet stacks |
+| MBConv | Expansion, depthwise convolution, SE, projection, normalization, residual path | Implements the core EfficientNet block |
+| MiniEfficientNet | Small MBConv network for CIFAR-scale experiments | Verifies the complete EfficientNet-style stack before full B0 |
+| EfficientNet builder | Stage configuration, repeated MBConv construction, scaling, dropout, progressive drop path | Builds EfficientNet from reusable configuration instead of hand-written blocks |
+| EfficientNet-B0 | Canonical seven-stage B0 layout with 16 MBConv blocks | Completes the Vision track with the target architecture |
 
-## Real training results
+## Development results
 
-These results are development gates, not leaderboard claims.
+These are engineering validation runs, not leaderboard claims.
 
 ### MNIST MLP
 
@@ -75,14 +76,12 @@ Configuration:
 - 1,000 test examples
 - 2 epochs
 
-Observed result:
-
 ```text
 epoch=01 train_loss=0.9249 test_acc=0.8560
 epoch=02 train_loss=0.3502 test_acc=0.8870
 ```
 
-### Deeper CNN on CIFAR-10 subset
+### Deeper CNN on a CIFAR-10 subset
 
 Configuration:
 
@@ -91,8 +90,6 @@ Configuration:
 - width multiplier 0.5
 - 10 epochs
 
-Observed progression:
-
 ```text
 train_loss: 1.7621 -> 0.9210
 train_acc:  34.67% -> 67.72%
@@ -100,7 +97,7 @@ val_loss:   1.6529 -> 0.9269
 val_acc:    39.15% -> 66.20%
 ```
 
-### MiniEfficientNet on CIFAR-10 subset
+### MiniEfficientNet on a CIFAR-10 subset
 
 Configuration:
 
@@ -111,8 +108,6 @@ Configuration:
 - stochastic depth enabled
 - 10 epochs
 
-Observed progression:
-
 ```text
 train_loss: 1.8950 -> 0.9943
 train_acc:  27.52% -> 63.93%
@@ -121,8 +116,6 @@ val_acc:    37.95% -> 66.05%
 ```
 
 ### Depthwise separable convolution benchmark
-
-A local CPU benchmark compared a standard convolution with the depthwise separable implementation used in this project.
 
 ```text
 standard params:  4,608
@@ -133,19 +126,66 @@ runtime ratio, separable / standard: 0.937
 
 The parameter reduction is large, but runtime is measured separately because fewer parameters do not automatically guarantee faster NumPy execution.
 
+## EfficientNet-B0 validation
+
+The canonical B0 configuration contains seven stages and 16 MBConv blocks.
+
+With a 1,000-class classifier:
+
+```text
+parameters=5,288,548
+blocks=16
+```
+
+For CIFAR-10, the classifier is changed to 10 classes and the stem uses stride 1 so the 32x32 input is not downsampled immediately:
+
+```text
+parameters=4,020,358
+blocks=16
+```
+
+A full forward and backward CPU profile completed successfully on the 10-class B0 configuration:
+
+```text
+parameter_and_grad_memory_mb=30.67
+persistent_buffer_memory_mb=0.16
+total_profiled_time=0.084933s
+```
+
+A controlled 256-image memorization diagnostic was used to verify end-to-end trainability. Augmentation and regularization were disabled only for this diagnostic.
+
+```text
+fit_acc epoch 1:  8.20%
+fit_acc epoch 5: 92.19%
+fit_acc epoch 10: 96.09%
+best observed fit_acc: 99.61%
+```
+
+A separate normal training sanity run kept augmentation and regularization enabled and showed learning on a 2,000-image CIFAR-10 training subset:
+
+```text
+train_loss: 2.4674 -> 2.0482
+train_acc:  16.75% -> 24.50%
+val_loss:   3.2895 -> 2.2256
+val_acc:    18.30% -> 23.40%
+```
+
+These runs are used to validate architecture construction, backward propagation, optimization, and general training behavior. ImageNet-scale training is intentionally outside the project scope.
+
 ## Validation approach
 
-The project does not depend on another neural network framework for correctness testing.
+The repository does not use another neural network framework as a correctness dependency.
 
-Backward implementations are checked with:
+Validation includes:
 
 - finite difference gradient checks
-- deterministic small tensor cases
+- deterministic small tensor tests
 - shape and state invariants
 - explicit residual branch tests
 - checkpoint round-trip tests
 - integrated loss reduction tests
 - real MNIST and CIFAR-10 training runs
+- full EfficientNet-B0 memorization diagnostics
 
 Current gradient-check coverage includes Linear, Conv2D, DepthwiseConv2D, BatchNorm2D, SiLU, SqueezeExcitation, and CrossEntropyLoss.
 
@@ -153,14 +193,20 @@ Current gradient-check coverage includes Linear, Conv2D, DepthwiseConv2D, BatchN
 
 ```text
 .
+├── .github/workflows/
 ├── docs/
+│   ├── EFFICIENTNET_B0.md
 │   ├── EFFICIENT_BLOCKS.md
+│   ├── PROJECT_SCOPE.md
 │   └── VALIDATION_STRATEGY.md
 ├── scripts/
 │   ├── benchmark_separable_conv.py
+│   ├── profile_efficientnet.py
+│   ├── smoke_train_efficientnet.py
 │   ├── smoke_train_mini_efficientnet.py
 │   ├── smoke_train_synthetic.py
 │   ├── train_cifar10.py
+│   ├── train_efficientnet.py
 │   ├── train_mini_efficientnet.py
 │   └── train_mnist.py
 ├── src/puredl/
@@ -173,6 +219,8 @@ Current gradient-check coverage includes Linear, Conv2D, DepthwiseConv2D, BatchN
 │   ├── utils/
 │   └── vision/
 ├── tests/unit/
+├── LICENSE
+├── README.md
 ├── VISION_ROADMAP.md
 ├── pyproject.toml
 └── requirements.txt
@@ -200,10 +248,10 @@ pytest -v
 Current checkpoint:
 
 ```text
-21 passed
+30 passed
 ```
 
-## Training commands
+## Useful commands
 
 ### MNIST
 
@@ -222,7 +270,7 @@ python scripts/train_cifar10.py \
   --limit-test 2000
 ```
 
-### MiniEfficientNet on a CIFAR-10 subset
+### MiniEfficientNet
 
 ```bash
 python scripts/train_mini_efficientnet.py \
@@ -234,35 +282,48 @@ python scripts/train_mini_efficientnet.py \
   --limit-test 2000
 ```
 
-### Resume MiniEfficientNet training
+### Full EfficientNet-B0 CPU profile
 
 ```bash
-python scripts/train_mini_efficientnet.py \
-  --epochs 10 \
-  --batch-size 32 \
-  --width 0.5 \
-  --drop-path 0.10 \
-  --limit-train 10000 \
-  --limit-test 2000 \
-  --resume
+python scripts/profile_efficientnet.py \
+  --batch-size 1 \
+  --width-mult 1.0 \
+  --depth-mult 1.0
 ```
 
-### Run the convolution benchmark
+### EfficientNet-B0 trainability diagnostic
 
 ```bash
-python scripts/benchmark_separable_conv.py
+python scripts/train_efficientnet.py \
+  --overfit-test \
+  --epochs 30 \
+  --batch-size 16 \
+  --width-mult 1.0 \
+  --depth-mult 1.0 \
+  --limit-train 256 \
+  --limit-test 256
 ```
 
-## Data and generated files
+## Project constraints
 
-Datasets, virtual environments, caches, checkpoints, and local experiment outputs are intentionally excluded from Git.
+Intentionally not used:
 
-CIFAR-10 and MNIST can be downloaded by the included dataset utilities when needed. Large local data files should not be committed to the repository.
+- PyTorch
+- TensorFlow
+- JAX
+- CuPy
+- automatic differentiation
+- CUDA-specific kernels
+- distributed training
 
-## Next milestone
+NumPy is not treated as a temporary placeholder for another backend. The CPU-only constraint is part of the project.
 
-The next milestone is a full EfficientNet-B0 implementation built from the already tested MBConv components. The focus will be stage construction, scaling, trainability at CIFAR resolution, and CPU profiling while keeping the project strictly NumPy-only.
+## Roadmap
+
+The Vision track is complete through EfficientNet-B0.
+
+See [VISION_ROADMAP.md](VISION_ROADMAP.md) for the completed progression and the planned Text track.
 
 ## License
 
-This project is released under the MIT License. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

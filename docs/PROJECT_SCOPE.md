@@ -10,7 +10,8 @@
 - checkpointing
 - gradient validation
 - profiling and measured optimization
-- vision models progressing toward EfficientNet-B0
+- vision models from MLP through EfficientNet-B0
+- planned text models from RNN through Transformer
 
 ## Intentionally excluded
 

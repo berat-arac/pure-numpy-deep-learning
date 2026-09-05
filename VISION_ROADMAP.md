@@ -40,11 +40,7 @@ Built:
 - learning rate schedulers
 - checkpoint save and resume
 
-Why this phase existed:
-
-This created the reusable vision stack needed for deeper architectures and verified that a fully manual NumPy CNN could learn on a real image dataset.
-
-Development gate on a 10,000 image training subset and 2,000 image validation subset:
+Development gate on a 10,000-image training subset and 2,000-image validation subset:
 
 ```text
 train_loss: 1.7621 -> 0.9210
@@ -67,11 +63,7 @@ Built:
 - depthwise input and weight gradient checks
 - standard versus separable convolution benchmark
 
-Why this phase existed:
-
-EfficientNet depends on residual paths and efficient channel-separated convolution. These operations were implemented and tested independently before combining them into larger blocks.
-
-Local benchmark result:
+Development benchmark:
 
 ```text
 standard params:  4,608
@@ -94,11 +86,7 @@ Built:
 - MiniEfficientNet checkpoint support
 - integrated MiniEfficientNet learning tests
 
-Why this phase existed:
-
-A full EfficientNet contains several interacting mechanisms. Building a smaller model first makes it possible to verify that the complete MBConv training path works before increasing depth and channel count.
-
-Development gate on a 10,000 image training subset and 2,000 image validation subset:
+Development gate on a 10,000-image training subset and 2,000-image validation subset:
 
 ```text
 parameters: 44,670
@@ -110,24 +98,82 @@ val_acc:    37.95% -> 66.05%
 
 ## Phase 5: EfficientNet-B0
 
-Status: in progress
+Status: complete
 
-Planned:
+Built:
 
-- B0 stage configuration
-- repeated MBConv stage builder
+- canonical seven-stage B0 configuration
+- 16-block MBConv depth configuration
+- repeated stage builder
 - width scaling
 - depth scaling
 - channel rounding
+- repeat scaling
 - classifier dropout
 - progressive drop-path scheduling
-- full topology tests
-- CIFAR-resolution training run
-- CPU profiling
-- memory and kernel optimization where measurements justify it
+- standard B0 stem mode
+- CIFAR-friendly stem mode
+- full forward propagation
+- full backward propagation
+- stage-level CPU profiler
+- training and checkpoint support
+- controlled small-data memorization diagnostic
 
-Why this phase exists:
+Architecture gate:
 
-This is the final vision milestone. It turns the independently tested components into a complete EfficientNet-B0-style training system while preserving the NumPy-only constraint.
+```text
+B0 MBConv blocks: 16
+B0 parameters with 1000 classes: 5,288,548
+CIFAR-10 configuration parameters: 4,020,358
+unit tests: 30 passed
+```
 
-ImageNet-scale training is not a requirement. The goal is a complete and trainable implementation with transparent CPU behavior.
+Full B0 CPU profile gate:
+
+```text
+parameter_and_grad_memory_mb=30.67
+persistent_buffer_memory_mb=0.16
+total_profiled_time=0.084933s
+```
+
+Trainability gate on a fixed 256-image CIFAR-10 subset:
+
+```text
+fit_acc epoch 1:  8.20%
+fit_acc epoch 5: 92.19%
+fit_acc epoch 10: 96.09%
+best observed fit_acc: 99.61%
+```
+
+A separate normal training sanity run kept augmentation and regularization enabled:
+
+```text
+train_loss: 2.4674 -> 2.0482
+train_acc:  16.75% -> 24.50%
+val_loss:   3.2895 -> 2.2256
+val_acc:    18.30% -> 23.40%
+```
+
+Why this phase existed:
+
+The final vision goal was not an ImageNet benchmark. It was to construct the full B0 architecture from configuration, run its complete forward and backward path with NumPy, verify that the model can be optimized end to end, and measure its CPU behavior.
+
+Those gates are now complete.
+
+## Vision completion
+
+Status: complete through EfficientNet-B0
+
+The Vision track now demonstrates a progression from a basic dense network to a full EfficientNet-B0 implementation while keeping the training path NumPy-only.
+
+## Next track: text
+
+Planned progression:
+
+- vanilla RNN
+- LSTM
+- attention
+- multi-head attention
+- decoder-only Transformer
+
+The same project rules remain in place: NumPy-only model execution, manual backward propagation, CPU training, and explicit validation of the implemented operations.
