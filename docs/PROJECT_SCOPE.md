@@ -11,7 +11,8 @@
 - gradient validation
 - profiling and measured optimization
 - vision models from MLP through EfficientNet-B0
-- planned text models from RNN through Transformer
+- text models from RNN and LSTM through a decoder-only Transformer
+- natural-language character completion on small public-domain prose corpora
 
 ## Intentionally excluded
 
@@ -23,7 +24,9 @@
 - CUDA-specific kernels
 - distributed training
 - ImageNet-scale training as a project requirement
+- large-language-model scale training
 - production framework compatibility
+- Transformer key-value caching
 
 ## Reason for the constraint
 

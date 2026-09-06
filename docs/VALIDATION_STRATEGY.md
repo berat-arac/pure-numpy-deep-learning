@@ -16,14 +16,22 @@ Current coverage includes:
 - SiLU
 - SqueezeExcitation input gradient
 - CrossEntropyLoss
+- Embedding
+- VanillaRNN input and parameter gradients
+- LSTM input and parameter gradients
+- GELU
+- LayerNorm input, scale, and bias gradients
+- scaled dot-product attention query, key, and value gradients
+- multi-head self-attention input gradients
+- complete decoder-block input gradients
 
 Why this is used:
 
-A model can sometimes reduce loss even when an individual backward implementation is slightly wrong. Gradient checks help catch those local errors before several layers are combined.
+A model can sometimes reduce loss even when an individual backward implementation is slightly wrong. Gradient checks help catch local errors before several layers are combined.
 
 ## Deterministic operation tests
 
-Small fixed arrays are used for operations such as pooling and loss functions.
+Small fixed arrays are used for operations such as pooling, loss functions, masking, and state handling.
 
 Why this is used:
 
@@ -36,6 +44,14 @@ Residual tests can disable the main branch and verify that the skip path still f
 Why this is used:
 
 Forgetting the skip contribution in backward propagation can silently damage gradient flow in deeper networks.
+
+## Causal attention tests
+
+Future value vectors are changed while earlier query positions are held fixed. Earlier outputs must remain unchanged.
+
+Why this is used:
+
+A decoder-only language model must never read future tokens during causal self-attention.
 
 ## Shape and state tests
 
@@ -50,14 +66,15 @@ Tests cover:
 - checkpoint save and restore
 - EfficientNet stage construction
 - width and depth scaling behavior
+- Transformer context and head shapes
 
 Why this is used:
 
-Many neural network bugs are state-management bugs rather than arithmetic bugs. These tests verify behavior around the numerical operations.
+Many neural network bugs are state-management or shape bugs rather than arithmetic bugs.
 
 ## Integrated learning tests
 
-Small NumPy-generated image tasks verify that complete model stacks can reduce loss through real optimizer updates.
+Small generated tasks verify that complete model stacks can reduce loss through real optimizer updates.
 
 Why this is used:
 
@@ -65,20 +82,32 @@ Passing isolated tests does not guarantee that several manually implemented laye
 
 ## Real dataset gates
 
-MNIST and CIFAR-10 are used as development gates.
+MNIST and CIFAR-10 are used for the Vision track. Natural English prose is used for the final Text track.
 
 Why this is used:
 
-Real data exposes optimization, normalization, batching, augmentation, and generalization behavior that synthetic tests cannot fully reproduce.
+Real data exposes optimization, normalization, batching, regularization, and generalization behavior that synthetic tests cannot fully reproduce.
 
-## Full-model memorization diagnostic
+## Full EfficientNet-B0 memorization diagnostic
 
-The complete EfficientNet-B0 implementation is also tested on a small fixed CIFAR-10 subset with augmentation and regularization disabled.
-
-Why this is used:
-
-This separates a basic trainability question from generalization. A large model should be able to fit a small fixed dataset if its forward path, backward path, optimizer updates, and state handling work together correctly.
+The complete EfficientNet-B0 implementation is tested on a small fixed CIFAR-10 subset with augmentation and regularization disabled.
 
 The diagnostic reached 99.61% fit accuracy on 256 fixed training images.
 
-This result is not reported as model quality. It is an end-to-end optimization check.
+This is not reported as model quality. It is an end-to-end optimization check showing that the complete forward path, backward path, optimizer updates, and model state work together.
+
+## Sequence-model training gates
+
+RNN, LSTM, and decoder-only Transformer models are trained on next-character prediction.
+
+The final Transformer run used 200,000 characters of public-domain English prose for 20 CPU epochs:
+
+```text
+train_loss: 2.7814 -> 1.4415
+val_loss:   2.5805 -> 1.7730
+val_acc:    26.11% -> 48.23%
+```
+
+The reported validation accuracy is next-character accuracy. It is used as a training-behavior signal, not as a language benchmark.
+
+Autoregressive prompt completion is also inspected to verify that the complete generation path works after training.

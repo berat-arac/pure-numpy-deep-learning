@@ -80,3 +80,54 @@ class BatchNorm2D(Module):
             m * grad_xhat - sum_grad - x_hat * sum_grad_xhat
         )
         return grad_x
+
+
+class LayerNorm(Module):
+    """Layer normalization over the final feature dimension."""
+
+    def __init__(self, normalized_shape: int, eps: float = 1e-5, *, dtype=np.float32) -> None:
+        super().__init__()
+        if normalized_shape <= 0:
+            raise ValueError("normalized_shape must be positive")
+        if eps <= 0:
+            raise ValueError("eps must be positive")
+        self.normalized_shape = int(normalized_shape)
+        self.eps = float(eps)
+        self.weight = Parameter(np.ones(self.normalized_shape, dtype=dtype))
+        self.bias = Parameter(np.zeros(self.normalized_shape, dtype=dtype))
+        self._xhat: np.ndarray | None = None
+        self._inv_std: np.ndarray | None = None
+
+    def forward(self, x: np.ndarray) -> np.ndarray:
+        if x.shape[-1] != self.normalized_shape:
+            raise ValueError(
+                f"expected last dimension {self.normalized_shape}, got {x.shape[-1]}"
+            )
+        mean = x.mean(axis=-1, keepdims=True)
+        centered = x - mean
+        var = np.mean(centered * centered, axis=-1, keepdims=True)
+        inv_std = 1.0 / np.sqrt(var + self.eps)
+        xhat = centered * inv_std
+        self._xhat = xhat
+        self._inv_std = inv_std
+        return xhat * self.weight.data + self.bias.data
+
+    def backward(self, grad_out: np.ndarray) -> np.ndarray:
+        if self._xhat is None or self._inv_std is None:
+            raise RuntimeError("forward must be called before backward")
+        if grad_out.shape != self._xhat.shape:
+            raise ValueError("grad_out shape mismatch")
+
+        reduce_axes = tuple(range(grad_out.ndim - 1))
+        self.weight.grad[...] = np.sum(grad_out * self._xhat, axis=reduce_axes)
+        self.bias.grad[...] = np.sum(grad_out, axis=reduce_axes)
+
+        grad_norm = grad_out * self.weight.data
+        features = self.normalized_shape
+        sum_grad = np.sum(grad_norm, axis=-1, keepdims=True)
+        sum_grad_xhat = np.sum(grad_norm * self._xhat, axis=-1, keepdims=True)
+        return (
+            self._inv_std
+            * (features * grad_norm - sum_grad - self._xhat * sum_grad_xhat)
+            / features
+        )
